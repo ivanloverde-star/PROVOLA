@@ -1,7 +1,7 @@
 # Updated V17_Version22ver ok.PY
 # Fix: quando la finestra principale veniva ridimensionata non veniva salvata la geometria
 # Aggiunto: persistenza larghezze (Treeview / colonne) in ui_layout.json con debounce
-# MODIFICA: la sezione "Cantanti" è stata spostata e suddivisa in due colonne posizionate sotto la colonna "Gestione lista".
+# MODIFICA: la sezione "Cantanti" è posizionata sopra "Gestione lista" nella colonna sinistra.
 import tkinter as tk
 from tkinter import ttk, font, simpledialog, messagebox, filedialog
 import json
@@ -942,11 +942,34 @@ class WaitingListApp:
         right_side_frame.grid_propagate(False)
 
         # Qui impiliamo due colonne (due frame affiancati) dentro right_side_frame usando pack con side=LEFT
-        # Colonna 1: Gestione lista (verticale)
+        # Colonna 1: Cantanti (in alto) e Gestione lista (sotto) - verticale
         col_gestione = ttk.Frame(right_side_frame)
         col_gestione.pack(side=tk.LEFT, fill=tk.Y, expand=False, padx=(0,6))
+        
+        # --- SEZIONE CANTANTI (ORA IN ALTO) ---
+        # La LabelFrame "Cantanti" è figlia di col_gestione e viene posizionata per prima
+        cantanti_section = ttk.LabelFrame(col_gestione, text="Cantanti", padding=(6,6))
+        cantanti_section.pack(side=tk.TOP, fill=tk.X, pady=(4, 4))
+
+        # dentro cantanti_section creiamo due colonne affiancate (sinistra espandente, destra non espandente)
+        cant_col_left = ttk.Frame(cantanti_section)
+        cant_col_left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0,4))
+        cant_col_right = ttk.Frame(cantanti_section)
+        # destra non espandente per mantenere l'allineamento
+        cant_col_right.pack(side=tk.LEFT, fill=tk.Y, expand=False, padx=(4,0))
+
+        # Left column buttons (Aggiungi, Modifica nome, Note)
+        ttk.Button(cant_col_left, text="Aggiungi", command=self.add_person).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
+        ttk.Button(cant_col_left, text="Modifica nome", command=self.edit_selected_name).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
+        ttk.Button(cant_col_left, text="Note", command=self.edit_selected_note).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
+
+        # Right column buttons (Elimina, N° Canzoni)
+        ttk.Button(cant_col_right, text="Elimina", command=self.delete_selected_name).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
+        ttk.Button(cant_col_right, text="N° Canzoni", command=self.edit_selected_songs).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
+
+        # --- SEZIONE GESTIONE LISTA (ORA SOTTO CANTANTI) ---
         section_lista = ttk.LabelFrame(col_gestione, text="Gestione lista", padding=(6,6))
-        section_lista.pack(fill=tk.X, pady=(4,4))
+        section_lista.pack(fill=tk.X, pady=(8,4))
         # Pulsanti disposti verticalmente
         ttk.Button(section_lista, text="Sposta ←", command=self.move_selected_up).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
         ttk.Button(section_lista, text="Sposta →", command=self.move_selected_down).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
@@ -958,7 +981,7 @@ class WaitingListApp:
         self.display_wait_btn.pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
         tk.Button(section_lista, text="Svuota lista", command=self.clear_list, bg="red", fg="white").pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
 
-        # Colonna 2: Extra (verticale), affiancata a Gestione lista
+        # Colonna 2: Extra (verticale), affiancata a col_gestione
         col_extra = ttk.Frame(right_side_frame)
         col_extra.pack(side=tk.LEFT, fill=tk.Y, expand=False)
         section_extra = ttk.LabelFrame(col_extra, text="Extra", padding=(6,6))
@@ -989,27 +1012,6 @@ class WaitingListApp:
             col_extra.bind("<Configure>", lambda e: self.on_column_configure("Extra", e.width))
         except Exception:
             pass
-
-        # --- NUOVA SEZIONE CANTANTI (ALLINEATA SOTTO 'Gestione lista') ---
-        # Ora la LabelFrame "Cantanti" è figlia di col_gestione in modo da rimanere allineata sotto Gestione lista.
-        cantanti_section = ttk.LabelFrame(col_gestione, text="Cantanti", padding=(6,6))
-        cantanti_section.pack(side=tk.TOP, fill=tk.X, pady=(8, 4))
-
-        # dentro cantanti_section creiamo due colonne affiancate (sinistra espandente, destra non espandente)
-        cant_col_left = ttk.Frame(cantanti_section)
-        cant_col_left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0,4))
-        cant_col_right = ttk.Frame(cantanti_section)
-        # destra non espandente per mantenere l'allineamento sotto Gestione lista
-        cant_col_right.pack(side=tk.LEFT, fill=tk.Y, expand=False, padx=(4,0))
-
-        # Left column buttons (Aggiungi, Modifica nome, Note)
-        ttk.Button(cant_col_left, text="Aggiungi", command=self.add_person).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
-        ttk.Button(cant_col_left, text="Modifica nome", command=self.edit_selected_name).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
-        ttk.Button(cant_col_left, text="Note", command=self.edit_selected_note).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
-
-        # Right column buttons (Elimina, N° Canzoni)
-        ttk.Button(cant_col_right, text="Elimina", command=self.delete_selected_name).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
-        ttk.Button(cant_col_right, text="N° Canzoni", command=self.edit_selected_songs).pack(side=tk.TOP, padx=4, pady=4, fill=tk.X)
         # ---------------------------------------------------------
 
         section_display = ttk.LabelFrame(frm, text="Display", padding=(6,6))
