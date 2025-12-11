@@ -926,6 +926,8 @@ class WaitingListApp:
             original_click(e)
             self.root.after(100, self.save_tree_column_widths)
         self.tree.bind("<ButtonRelease-1>", combined_click)
+        # Bind a B1-Motion per catturare il ridimensionamento colonne durante il drag
+        self.tree.bind("<B1-Motion>", lambda e: self.root.after(150, self.save_tree_column_widths))
         # Bind per salvare resize della Treeview (considerata "tabella")
         try:
             self.tree_frame.bind("<Configure>", lambda e: self.on_column_configure("AlberoFrame", e.width))
